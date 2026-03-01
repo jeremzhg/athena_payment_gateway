@@ -1,5 +1,7 @@
 # Mini Hackathon Alibaba – Multi-Agent Payment POC
 
+For quick demo of this flow/protocol, please refer to the [Demo Guide](docs/demo_guide.md).
+
 This workspace now follows the 4-application specification:
 
 1. `athena_backend` – FastAPI payment gateway core
@@ -40,14 +42,20 @@ If `DASHSCOPE_API_KEY` is missing or Qwen is temporarily unavailable, backend fa
 - `POST /transactions/create`
 - `POST /transactions/pay`
 
-## Run All 4 Applications
+## Run the Applications
+
+### Prerequisites
+
+- Python `>=3.11`, `uv` installed
+- Node.js `>=20`, `npm` installed
+- Gemini CLI (`gemini`) installed (`npm install -g @google/gemini-cli`)
 
 ### 1) Athena Backend
 
 ```bash
 cd athena_backend
 uv sync
-uv run uvicorn main:app --reload --port 8000
+uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ### 2) Athena Frontend
@@ -58,7 +66,22 @@ npm install
 npm run dev -- --port 5173
 ```
 
-### 3) Athena MCP
+### 3) Start Gemini CLI (Agent)
+
+Your Gemini MCP config is already set in `.gemini/settings.json` (inside the `demo` folder). This config auto-starts both `athena_mcp` and `shopee_mcp`.
+
+```bash
+cd demo
+gemini
+```
+
+> **Note:** You do **not** need to manually start `athena_mcp` and `shopee_mcp` if you are using the Gemini CLI config.
+
+### Manual MCP Startup (Optional)
+
+If you are using a different MCP client that requires manual server startup:
+
+#### Athena MCP
 
 ```bash
 cd athena_mcp
@@ -71,7 +94,7 @@ Optional environment variables:
 - `ATHENA_BACKEND_URL` (default: `http://localhost:8000`)
 - `ATHENA_FRONTEND_PORT` (default: `5173`)
 
-### 4) Shopee MCP
+#### Shopee MCP
 
 ```bash
 cd shopee_mcp
@@ -86,13 +109,13 @@ Optional environment variables:
 
 ## Expected Demo Flow
 
-1. Login as `admin` / `password` in frontend.
+1. Login as `admin` / `password` in the frontend (http://localhost:5173).
 2. Create account (example: limit `50`, rule `Only for grocery`).
-3. Athena MCP tool calls `login` and gets auth link.
-4. User opens link and authorizes token against the account.
-5. Shopee MCP tool calls `belanja`, then `checkout`.
-6. Athena MCP tool calls `process_payment(transaction_id)`.
-7. Backend returns success/failure (`Limit Exceeded` or `Rule Violated` when applicable).
+3. In Gemini chat, prompt the agent to call `authenticate_agent` (Athena MCP) to retrieve the authorization URL.
+4. User opens the returned link and authorizes the token against the account.
+5. In Gemini chat, prompt the agent to browse and pick items (`browse_items`), then call `checkout` (Shopee MCP).
+6. Once the agent receives the `transaction_id`, prompt it to call `process_payment` (Athena MCP) to finalize the payment.
+7. Backend validation returns success or failure (e.g. `Limit Exceeded` or `Rule Violated`).
 
 ## Demo Assets
 
