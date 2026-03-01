@@ -1,6 +1,8 @@
 # Demo Guide: Mini Hackathon Alibaba
 
-This guide shows the fastest way to demo the full 4-app flow with Qwen Code CLI:
+**We are currently using Gemini CLi as the agent client due to Qwen Code's MCP feature being broken as of writing.**
+
+This guide shows the fastest way to demo the full 4-app flow with Gemini CLI:
 
 1. `athena_backend` (payment gateway API)
 2. `athena_frontend` (user dashboard)
@@ -13,27 +15,27 @@ This guide shows the fastest way to demo the full 4-app flow with Qwen Code CLI:
 - Node.js `>=20`
 - `uv` installed
 - `npm` installed
-- Qwen Code CLI (`qwen`) installed
+- Gemini CLI (`gemini`) installed
 
-Optional (for live Qwen checks):
+Optional (for live Gemini checks):
 
 - `DASHSCOPE_API_KEY`
 
 If `DASHSCOPE_API_KEY` is not set, backend falls back to local heuristic checks so the demo can still run.
 
-## 0) Install Qwen Code CLI
+## 0) Install Gemini CLI
 
-If `qwen` is not installed yet:
+If `gemini` is not installed yet:
 
 ```bash
-npm install -g @qwen-code/qwen-code
+npm install -g @google/gemini-cli
 ```
 
 Verify installation:
 
 ```bash
-qwen --version
-qwen mcp --help
+gemini --version
+gemini mcp --help
 ```
 
 ## 1) Start Athena Backend
@@ -66,11 +68,11 @@ Open:
 
 - `http://localhost:5173`
 
-## 3) Start Qwen Code CLI (MCP already configured)
+## 3) Start Gemini CLI (MCP already configured)
 
-Your Qwen MCP config is already set in:
+Your Gemini MCP config is already set in:
 
-- `.qwen/settings.json`
+- `.gemini/settings.json`
 
 It includes both servers:
 
@@ -81,19 +83,19 @@ Verify they are available:
 
 ```bash
 cd demo
-qwen mcp list
+gemini mcp list
 ```
 
-Then launch Qwen in interactive mode:
+Then launch Gemini in interactive mode:
 
 ```bash
 cd demo
-qwen
+gemini
 ```
 
-> You do **not** need to manually start `athena_mcp` and `shopee_mcp` if Qwen is using `.qwen/settings.json`.
+> You do **not** need to manually start `athena_mcp` and `shopee_mcp` if Gemini is using `.gemini/settings.json`.
 
-## 4) Demo Script (End-to-End in Qwen)
+## 4) Demo Script (End-to-End in Gemini)
 
 ### A. User setup (Frontend)
 
@@ -104,9 +106,9 @@ qwen
    - `balanceLimit`: `50`
    - `rule`: `Only for grocery`
 
-### B. Agent authorization flow (Qwen prompt)
+### B. Agent authorization flow (Gemini prompt)
 
-In Qwen chat, send this prompt:
+In Gemini chat, send this prompt:
 
 ```text
 Call Athena MCP login (or authenticate_agent) now and show me only the authorization URL.
@@ -117,9 +119,9 @@ Then:
 1. Open returned URL in browser (format: `http://localhost:5173/authorize?token=mcp_<...>`)
 2. Select the account from step A and authorize.
 
-### C. Shopping and payment flow (Qwen prompts)
+### C. Shopping and payment flow (Gemini prompts)
 
-In Qwen chat, run prompts below in order.
+In Gemini chat, run prompts below in order.
 
 1) Browse items:
 
@@ -143,7 +145,7 @@ Expected outcomes:
 
 ## 5) Quick Failure Scenarios (recommended prompts)
 
-Run these in Qwen chat:
+Run these in Gemini chat:
 
 ### A) Limit failure
 
@@ -172,11 +174,11 @@ Expected outcome: `Rule Violated`.
 
 ## 7) Troubleshooting
 
-- Qwen cannot find MCP servers:
-   - Ensure you launch Qwen from demo workspace root so `.qwen/settings.json` is loaded:
-   - `cd demo && qwen`
+- Gemini cannot find MCP servers:
+   - Ensure you launch Gemini from demo workspace root so `.gemini/settings.json` is loaded:
+   - `cd demo && gemini`
    - Confirm server registration:
-   - `qwen mcp list`
+   - `gemini mcp list`
 
 - `error: Failed to spawn: uvicorn`
   - Run from `athena_backend` and ensure dependencies are synced:
@@ -186,14 +188,14 @@ Expected outcome: `Rule Violated`.
   - Ensure backend is running on `http://localhost:8000`
 
 - MCP payments always fail with missing token:
-   - Ensure Athena MCP `login` is called first in the same Qwen session.
+   - Ensure Athena MCP `login` is called first in the same Gemini session.
 
-## 8) One-shot Qwen command examples (optional)
+## 8) One-shot Gemini command examples (optional)
 
 You can also run one-shot prompts without entering interactive mode:
 
 ```bash
-qwen "Call Shopee MCP belanja and list items in a compact table."
+gemini "Call Shopee MCP belanja and list items in a compact table."
 ```
 
-For multi-step tool flows, interactive mode (`qwen`) is recommended.
+For multi-step tool flows, interactive mode (`gemini`) is recommended.
