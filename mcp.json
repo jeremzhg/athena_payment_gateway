@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "athena-mcp": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "${workspaceFolder}/athena_mcp",
+        "run",
+        "python",
+        "main.py"
+      ],
+      "env": {
+        "ATHENA_BACKEND_URL": "http://localhost:8000",
+        "ATHENA_FRONTEND_PORT": "5173"
+      }
+    },
+    "shopee-mcp": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "${workspaceFolder}/shopee_mcp",
+        "run",
+        "python",
+        "main.py"
+      ],
+      "env": {
+        "ATHENA_BACKEND_URL": "http://localhost:8000",
+        "SHOPEE_MERCHANT_ID": "ShopeeDummyMerchant"
+      }
+    }
+  }
+}

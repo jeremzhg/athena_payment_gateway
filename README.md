@@ -19,7 +19,17 @@ This workspace now follows the 4-application specification:
 - Backend enforces:
   - token authorization
   - account limit validation
-  - mock Alibaba/Qwen-like rule-category relevance check
+  - Alibaba Qwen-based rule-category relevance check
+
+### Qwen API setup (Athena Backend)
+
+Set these environment variables before running `athena_backend`:
+
+- `DASHSCOPE_API_KEY` (required for live Qwen checks)
+- `QWEN_MODEL` (optional, default: `qwen3.5-plus`)
+- `QWEN_BASE_URL` (optional, default: DashScope compatible URL)
+
+If `DASHSCOPE_API_KEY` is missing or Qwen is temporarily unavailable, backend falls back to local heuristic rule matching so the demo remains usable.
 
 ## Backend API (Spec-aligned)
 
@@ -83,3 +93,8 @@ Optional environment variables:
 5. Shopee MCP tool calls `belanja`, then `checkout`.
 6. Athena MCP tool calls `process_payment(transaction_id)`.
 7. Backend returns success/failure (`Limit Exceeded` or `Rule Violated` when applicable).
+
+## Demo Assets
+
+- Step-by-step demo walkthrough: `docs/demo_guide.md`
+- MCP client server config (Athena + Shopee): `mcp.json`
