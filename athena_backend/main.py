@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from database import Base, engine, get_db
 from models import AgentAccount, AuthToken, Merchant, Transaction, User
+from qwen_rule_check import check_rule_with_qwen
 
 
 Base.metadata.create_all(bind=engine)
@@ -293,7 +294,11 @@ def pay_transaction(
             "transaction_id": transaction.transaction_id,
         }
 
-    allowed_by_rule = mock_qwen_rule_check(account.rule, transaction.category)
+    try:
+        allowed_by_rule = check_rule_with_qwen(account.rule, transaction.category)
+    except Exception:
+        allowed_by_rule = mock_qwen_rule_check(account.rule, transaction.category)
+
     if not allowed_by_rule:
         transaction.status = "failed"
         transaction.failure_reason = "Rule Violated"
