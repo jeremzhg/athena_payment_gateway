@@ -13,12 +13,28 @@ This guide shows the fastest way to demo the full 4-app flow with Qwen Code CLI:
 - Node.js `>=20`
 - `uv` installed
 - `npm` installed
+- Qwen Code CLI (`qwen`) installed
 
 Optional (for live Qwen checks):
 
 - `DASHSCOPE_API_KEY`
 
 If `DASHSCOPE_API_KEY` is not set, backend falls back to local heuristic checks so the demo can still run.
+
+## 0) Install Qwen Code CLI
+
+If `qwen` is not installed yet:
+
+```bash
+npm install -g @qwen-code/qwen-code
+```
+
+Verify installation:
+
+```bash
+qwen --version
+qwen mcp --help
+```
 
 ## 1) Start Athena Backend
 
