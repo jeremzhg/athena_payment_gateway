@@ -80,14 +80,14 @@ It includes both servers:
 Verify they are available:
 
 ```bash
-cd /home/kris/Documents/projects/mini_hackathon_alibaba
+cd demo
 qwen mcp list
 ```
 
 Then launch Qwen in interactive mode:
 
 ```bash
-cd /home/kris/Documents/projects/mini_hackathon_alibaba
+cd demo
 qwen
 ```
 
@@ -173,8 +173,8 @@ Expected outcome: `Rule Violated`.
 ## 7) Troubleshooting
 
 - Qwen cannot find MCP servers:
-   - Ensure you launch Qwen from workspace root so `.qwen/settings.json` is loaded:
-   - `cd /home/kris/Documents/projects/mini_hackathon_alibaba && qwen`
+   - Ensure you launch Qwen from demo workspace root so `.qwen/settings.json` is loaded:
+   - `cd demo && qwen`
    - Confirm server registration:
    - `qwen mcp list`
 
