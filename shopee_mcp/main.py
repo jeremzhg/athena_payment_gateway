@@ -12,7 +12,7 @@ mcp = FastMCP("shopee-mcp")
 MOCK_ITEMS = [
     {"id": "item_1", "name": "Fresh Apples", "price": 12.5, "category": "Groceries"},
     {"id": "item_2", "name": "Rice 5kg", "price": 18.0, "category": "Groceries"},
-    {"id": "item_3", "name": "Wireless Headset", "price": 79.0, "category": "Electronics"},
+    {"id": "item_3", "name": "Wireless Headset", "price": 50.0, "category": "Electronics"},
     {"id": "item_4", "name": "Mechanical Keyboard", "price": 95.0, "category": "Electronics"},
 ]
 
