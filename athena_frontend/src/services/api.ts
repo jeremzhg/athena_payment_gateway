@@ -4,7 +4,7 @@
  */
 
 const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 // ── Backend Types ──────────────────────────────────────────────────────
 
@@ -375,5 +375,54 @@ export async function regenerateApiKey(): Promise<{
 }> {
     return apiClient("/v1/settings/api-key/regenerate", {
         method: "POST",
+    });
+}
+
+// ── Spec-compliant Athena POC endpoints ───────────────────────────────
+
+export interface AthenaLoginResponse {
+    status: string;
+    username: string;
+    message: string;
+}
+
+export interface AgentAccountDto {
+    accountId: string;
+    balanceLimit: number;
+    rule: string;
+}
+
+export async function athenaLogin(
+    username: string,
+    password: string
+): Promise<AthenaLoginResponse> {
+    return apiClient<AthenaLoginResponse>("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ username, password }),
+    });
+}
+
+export async function getAgentAccounts(): Promise<AgentAccountDto[]> {
+    return apiClient<AgentAccountDto[]>("/accounts");
+}
+
+export async function saveAgentAccount(payload: {
+    accountId?: string;
+    balanceLimit: number;
+    rule: string;
+}): Promise<AgentAccountDto> {
+    return apiClient<AgentAccountDto>("/accounts", {
+        method: "POST",
+        body: JSON.stringify(payload),
+    });
+}
+
+export async function authorizeMcpToken(
+    mcp_token: string,
+    accountId: string
+): Promise<{ status: string; mcp_token: string; accountId: string; message: string }> {
+    return apiClient("/auth/authorize-mcp", {
+        method: "POST",
+        body: JSON.stringify({ mcp_token, accountId }),
     });
 }

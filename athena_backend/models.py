@@ -1,51 +1,63 @@
+import datetime
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from database import Base
-import datetime
-import uuid
 
-class Category(Base):
-    __tablename__ = "categories"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
-    initial_limit = Column(Float, default=0.0)
-    remaining_budget = Column(Float, default=0.0)
-
-class Transaction(Base):
-    __tablename__ = "transactions"
+class Merchant(Base):
+    __tablename__ = "athena_merchants"
 
     id = Column(Integer, primary_key=True, index=True)
-    amount = Column(Float)
-    merchant_id = Column(String)
-    category_name = Column(String)
-    purpose = Column(String)
-    status = Column(String, default="pending")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    merchant_id = Column(String, unique=True, nullable=False, index=True)
+    name = Column(String, nullable=False)
 
-class History(Base):
-    __tablename__ = "history"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_task = Column(String)
-    active_account_category = Column(String)
-    transaction_amount = Column(Float)
-    decision = Column(String)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "athena_users"
 
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
+    username = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    name = Column(String, default="")
-    timezone = Column(String, default="utc+7")
-    two_fa_enabled = Column(Boolean, default=False)
-    session_timeout = Column(Integer, default=30)
-    email_notifications = Column(Boolean, default=True)
-    threat_alerts = Column(Boolean, default=True)
-    weekly_report = Column(Boolean, default=False)
-    agent_status_alerts = Column(Boolean, default=True)
-    api_key = Column(String, default=lambda: f"ak_live_{uuid.uuid4().hex}")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+
+    accounts = relationship("AgentAccount", back_populates="owner")
+
+
+class AgentAccount(Base):
+    __tablename__ = "athena_agent_accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(String, unique=True, index=True, nullable=False)
+    balance_limit = Column(Float, nullable=False)
+    rule = Column(String, nullable=False)
+    owner_user_id = Column(Integer, ForeignKey("athena_users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False)
+
+    owner = relationship("User", back_populates="accounts")
+
+
+class AuthToken(Base):
+    __tablename__ = "athena_auth_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    mcp_token = Column(String, unique=True, index=True, nullable=False)
+    account_id = Column(String, ForeignKey("athena_agent_accounts.account_id"), nullable=True)
+    is_authorized = Column(Boolean, default=False, nullable=False)
+    authorized_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+
+
+class Transaction(Base):
+    __tablename__ = "athena_transactions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    transaction_id = Column(String, unique=True, index=True, nullable=False)
+    amount = Column(Float, nullable=False)
+    merchant_id = Column(String, nullable=False)
+    category = Column(String, nullable=False)
+    status = Column(String, default="pending", nullable=False)
+    failure_reason = Column(String, nullable=True)
+    webhook_status = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False)
