@@ -1,0 +1,35 @@
+sequenceDiagram
+    participant Agent as Client Agent (OpenClaw)
+    participant Ecom as E-Commerce API (Shopee Mock)
+    participant PG as Payment Gateway (Backend)
+    participant LLM as Policy Evaluator (Qwen)
+
+    Note over Agent, Ecom: Browser Automation / Protocol
+    Note over Agent, PG: Tool Integration (Athena MCP)
+    Note over Ecom, PG: Server-to-Server REST API
+
+    Agent->>Ecom: Initiate Shopping Session (Browse/Cart)
+    Ecom-->>Agent: Return Product/Cart Data
+
+    Agent->>Ecom: Submit Checkout Request
+    
+    Ecom->>PG: Create Payment Intent (Amount, Merchant Token, Category)
+    PG-->>Ecom: Return Transaction ID
+    
+    Ecom-->>Agent: Acknowledge Checkout & Provide Transaction ID
+    Note right of Agent: Agent triggers Athena MCP tool<br/>for payment authorization
+    
+    Agent->>PG: Authorize Payment (Account ID, Transaction ID)
+    
+    activate PG
+    PG->>PG: Validate Account Balance & Limits
+    
+    PG->>LLM: Evaluate Purchase Relevance vs. Account Purpose
+    activate LLM
+    LLM-->>PG: Evaluation Verdict (Approved/Rejected)
+    deactivate LLM
+    
+    PG-->>Ecom: Payment Status Callback (Transaction Success)
+    deactivate PG
+    
+    Ecom-->>Agent: Order Confirmation (Transaction Complete)

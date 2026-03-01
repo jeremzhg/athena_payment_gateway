@@ -1,0 +1,29 @@
+flowchart TD
+    A[AI Agent calls Athena MCP login] --> B[Athena MCP generates opaque mcp_token]
+    B --> C[Store token only in Athena MCP runtime memory: _current_token]
+    C --> D[Return authorization URL to user]
+
+    D --> E[User opens Athena Frontend authorize page]
+    E --> F[Frontend sends mcp_token + selected accountId to Athena Backend]
+    F --> G[(AuthTokens table)]
+    G --> H[Bind mcp_token -> accountId]
+    H --> I[(AgentAccounts table)]
+    I --> J[Account policy: balanceLimit + rule]
+
+    K[AI Agent calls process_payment with transaction_id] --> L[Athena MCP sends only transaction_id + mcp_token]
+    L --> M[Athena Backend /transactions/pay]
+    M --> G
+    M --> I
+    M --> N[Validate limit + rule check]
+    N --> O[Approve or reject payment]
+
+    P[Banking password / card number / CVV] -. never sent to AI Agent .-> Q[Not stored in Athena MCP]
+    P -. never included in tool responses .-> R[Credential leak risk reduced]
+    G --> R
+    I --> R
+
+    classDef secure fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px,color:#1b5e20;
+    classDef warning fill:#fff3e0,stroke:#ef6c00,stroke-width:1px,color:#e65100;
+
+    class G,I,J,N,O,R secure;
+    class P,Q warning;

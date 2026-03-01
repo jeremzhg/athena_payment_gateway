@@ -1,134 +1,123 @@
-# AI Security Interceptor
+# Mini Hackathon Alibaba – Multi-Agent Payment POC
 
-A functional FastAPI mock backend designed to act as middleware. It prevents autonomous AI agents from making unauthorized financial transactions by validating the intent of the purchase against the active account category using a Gemini LLM.
+For quick demo of this flow/protocol, please refer to the [Demo Guide](docs/demo_guide.md).
 
-## Features
+This workspace now follows the 4-application specification:
 
-- Mocks a checkout flow (e.g., from Shopee) to generate pending transactions.
-- Uses **Gemini 2.5 Flash** to semantically verify if the `purpose` of the transaction aligns with the `active_account_category`.
-- Tracks spending budgets dynamically stored in a PostgreSQL database.
-- Returns a strict JSON response with a decision (`ALLOW` or `BLOCK`), detailed reasoning, and limit verifications.
+1. `athena_backend` – FastAPI payment gateway core
+2. `athena_frontend` – React dashboard + MCP authorization page
+3. `athena_mcp` – MCP payment tool server (`login`, `process_payment`)
+4. `shopee_mcp` – MCP shopping tool server (`belanja`, `checkout`)
 
-## Setup
+## Architecture Summary
 
-1. **Install dependencies** (requires [uv](https://docs.astral.sh/uv/)):
+- A hardcoded user (`admin` / `password`) logs in through the frontend.
+- The user creates `Agent Accounts` with `accountId`, `balanceLimit`, and `rule`.
+- Athena MCP creates an unauthorized `mcp_token` and asks the user to authorize it using:
+  - `http://localhost:5173/authorize?token=<mcp_token>`
+- Frontend binds the token to an account through backend `POST /auth/authorize-mcp`.
+- Shopee MCP creates transactions with `POST /transactions/create`.
+- Athena MCP finalizes payment with `POST /transactions/pay` using its token.
+- Backend enforces:
+  - token authorization
+  - account limit validation
+  - Alibaba Qwen-based rule-category relevance check
 
-   ```bash
-   cd athena_backend
-   uv sync
-   ```
+### Qwen API setup (Athena Backend)
 
-2. **Database Configuration**:
-   The backend uses a PostgreSQL database. Set the `DATABASE_URL` environment variable if your database is not local, and make sure to configure your `GEMINI_API_KEY`:
+Set these environment variables before running `athena_backend`:
 
-   ```bash
-   export DATABASE_URL="postgresql://user:password@localhost:5432/dbname"
-   export GEMINI_API_KEY="your_api_key_here"
-   ```
+- `DASHSCOPE_API_KEY` (required for live Qwen checks)
+- `QWEN_MODEL` (optional, default: `qwen3.5-plus`)
+- `QWEN_BASE_URL` (optional, default: DashScope compatible URL)
 
-   _By default, it will attempt to connect to: `postgresql://postgres:postgres@localhost:5432/postgres` if no URL is provided._
+If `DASHSCOPE_API_KEY` is missing or Qwen is temporarily unavailable, backend falls back to local heuristic rule matching so the demo remains usable.
 
-3. **Run the server**:
-   ```bash
-   uv run uvicorn main:app --reload
-   ```
-   The backend will automatically generate the required database tables upon startup!
+## Backend API (Spec-aligned)
 
-## Budgets & Categories
+- `POST /auth/login`
+- `GET /accounts`
+- `POST /accounts`
+- `POST /auth/authorize-mcp`
+- `POST /transactions/create`
+- `POST /transactions/pay`
 
-The backend automatically manages categories and tracking budgets within the PostgreSQL database via SQLAlchemy models (`categories` and `transactions` tables).
+## Run the Applications
 
-You can populate these tables directly or utilize the exposed `/api/v1/categories` endpoints to do so automatically.
+### Prerequisites
 
-### Example: Creating a Category
+- Python `>=3.11`, `uv` installed
+- Node.js `>=20`, `npm` installed
+- Gemini CLI (`gemini`) installed (`npm install -g @google/gemini-cli`)
 
-1. Method: `POST`
-2. URL: `http://127.0.0.1:8000/api/v1/categories`
+### 1) Athena Backend
 
-**Request Body**:
-
-```json
-{
-  "name": "cloud",
-  "limit": 5000.0
-}
+```bash
+cd athena_backend
+uv sync
+uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-**Expected Response**:
+### 2) Athena Frontend
 
-```json
-{
-  "status": "success",
-  "category": "cloud",
-  "limit": 5000.0,
-  "message": "Created category cloud with limit 5000.0"
-}
+```bash
+cd athena_frontend
+npm install
+npm run dev -- --port 5173
 ```
 
-## How to Use
+### 3) Start Gemini CLI (Agent)
 
-You can test the API by simulating a transaction creation and then authorizing it.
+Your Gemini MCP config is already set in `.gemini/settings.json` (inside the `demo` folder). This config auto-starts both `athena_mcp` and `shopee_mcp`.
 
-You can use the interactive Swagger UI by navigating to `http://127.0.0.1:8000/docs` in your browser.
-
-### Example Flow
-
-**Step 1. Create a Pending Transaction (Shopee Mock)**
-
-1. Method: `POST`
-2. URL: `http://127.0.0.1:8000/api/v1/shopee/create_transaction`
-
-**Request Body**:
-
-```json
-{
-  "amount": 1000.0,
-  "merchant_id": "shopee_1",
-  "category": "cloud",
-  "purpose": "Pay for the new database servers at AWS immediately."
-}
+```bash
+cd demo
+gemini
 ```
 
-**Expected Response**:
+> **Note:** You do **not** need to manually start `athena_mcp` and `shopee_mcp` if you are using the Gemini CLI config.
 
-```json
-{
-  "transaction_id": 1
-}
+### Manual MCP Startup (Optional)
+
+If you are using a different MCP client that requires manual server startup:
+
+#### Athena MCP
+
+```bash
+cd athena_mcp
+uv sync
+uv run python main.py
 ```
 
-**Step 2. Authorize the Transaction via AI Verification**
+Optional environment variables:
 
-This simulates the Agent supplying its assigned account ID array to complete the purchase.
+- `ATHENA_BACKEND_URL` (default: `http://localhost:8000`)
+- `ATHENA_FRONTEND_PORT` (default: `5173`)
 
-1. Method: `POST`
-2. URL: `http://127.0.0.1:8000/api/v1/authorize`
+#### Shopee MCP
 
-**Request Body**:
-
-```json
-{
-  "account_id": "cloud",
-  "transaction_id": 1
-}
+```bash
+cd shopee_mcp
+uv sync
+uv run python main.py
 ```
 
-**Expected Response**:
+Optional environment variables:
 
-```json
-{
-  "decision": "ALLOW",
-  "context_verification": {
-    "account_category": "cloud",
-    "is_context_valid": true,
-    "context_reasoning": "Gemini verified purchase is relevant."
-  },
-  "limit_verification": {
-    "initial_limit": 5000.0,
-    "remaining_budget": 4000.0
-  },
-  "security_summary": "Transaction authorized. Context and budget are both approved."
-}
-```
+- `ATHENA_BACKEND_URL` (default: `http://localhost:8000`)
+- `SHOPEE_MERCHANT_ID` (default: `ShopeeDummyMerchant`)
 
-If the purpose was "Buy a new smartphone" instead, Gemini would reject the context match for the "cloud" category, and the transaction would be `BLOCK`ed.
+## Expected Demo Flow
+
+1. Login as `admin` / `password` in the frontend (http://localhost:5173).
+2. Create account (example: limit `50`, rule `Only for grocery`).
+3. In Gemini chat, prompt the agent to call `authenticate_agent` (Athena MCP) to retrieve the authorization URL.
+4. User opens the returned link and authorizes the token against the account.
+5. In Gemini chat, prompt the agent to browse and pick items (`browse_items`), then call `checkout` (Shopee MCP).
+6. Once the agent receives the `transaction_id`, prompt it to call `process_payment` (Athena MCP) to finalize the payment.
+7. Backend validation returns success or failure (e.g. `Limit Exceeded` or `Rule Violated`).
+
+## Demo Assets
+
+- Step-by-step demo walkthrough: `docs/demo_guide.md`
+- MCP client server config (Athena + Shopee): `mcp.json`

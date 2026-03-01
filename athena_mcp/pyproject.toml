@@ -1,0 +1,12 @@
+[project]
+name = "athena-mcp"
+version = "0.1.0"
+description = "Athena MCP server for payment authorization flow"
+requires-python = ">=3.11"
+dependencies = [
+  "mcp>=1.9.0",
+  "httpx>=0.28.0",
+]
+
+[project.scripts]
+athena-mcp = "main:run"
