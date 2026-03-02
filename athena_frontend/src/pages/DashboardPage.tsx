@@ -77,7 +77,7 @@ export const DashboardPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-dark text-white px-4 py-8">
+        <div className="min-h-screen bg-dark text-white px-4 py-8 mt-32">
             <div className="max-w-5xl mx-auto grid gap-6 lg:grid-cols-2">
                 <section className="border border-dark-border rounded-xl p-6 bg-darkish-grey">
                     <div className="flex items-start justify-between gap-4">
