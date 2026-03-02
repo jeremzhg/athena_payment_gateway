@@ -305,7 +305,7 @@ def pay_transaction(
         db.commit()
         return {
             "status": "failure",
-            "reason": "Rule Violated",
+            "reason": "Agent Account Rule Violated: " + account.rule,
             "transaction_id": transaction.transaction_id,
         }
 
